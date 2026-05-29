@@ -331,7 +331,7 @@
     .bl-likert-seg .v{font-size:12px;line-height:1}
     .bl-likert-seg .lab{font-size:8.5px;font-weight:600;opacity:.85;margin-top:2px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
     .bl-s-no{background:#B51A03;color:#fff}
-    .bl-s-dudo{background:#d99aa3;color:#fff}
+    .bl-s-dudo{background:#D1D5DB;color:#0F1729}
     .bl-s-tal{background:#FBDBDF;color:#0F1729}
     .bl-s-si{background:#0F1729;color:#fff}
     .bl-bench-line{position:absolute;top:0;bottom:0;width:3px;background:#375395;border-radius:2px;box-shadow:0 0 0 2px rgba(255,255,255,.7),0 0 0 3px rgba(55,83,149,.3);z-index:3;transform:translateX(-50%);pointer-events:none}
@@ -723,10 +723,10 @@
         sub:'¿Qué tan probable es que incluyas este producto en tu próxima compra?',
         type:'bullet_likert',
         benchmark:60,
-        benchmarkLabel:'Benchmark categoría',
+        benchmarkLabel:'benchmark Franuí 2025',
         colorMap:{
           'Compradores Potenciales':'#0F1729',
-          'Indecisos':'#FBDBDF',
+          'Indecisos':'#D1D5DB',
           'No compradores':'#B51A03'
         } },
       { col:'Yxu6Dx62DCgaVcghQSFx', title:'Sustitución de la categoría',
@@ -790,7 +790,7 @@
 
     // ── CHART COLOR HELPER ──
     function getChartColors(){
-      return{tickColor:'#9CA3AF',gridColor:'rgba(0,0,0,.04)',borderColor:'#FFFFFF'};
+      return{tickColor:'#374151',gridColor:'rgba(0,0,0,.04)',borderColor:'#FFFFFF'};
     }
     function chartDefaults(){
       const c=getChartColors();
@@ -807,7 +807,7 @@
       charts[id]=new Chart(canvas.getContext('2d'),{
         type:'bar',
         data:{labels:labels.map(l=>wrapLabel(String(l),horiz?28:16)),datasets:[{data,backgroundColor:colors,borderRadius:5,borderSkipped:false}]},
-        options:{...CD,indexAxis:horiz?'y':'x',plugins:{...CD.plugins,datalabels:showDL?{anchor:horiz?'end':'end',align:horiz?'end':'top',formatter:v=>total>0?Math.round(v/total*100)+'%':'',font:{family:"'Poppins',sans-serif",weight:600,size:fs},color:'#4a5568',clip:false}:{display:false}},
+        options:{...CD,indexAxis:horiz?'y':'x',plugins:{...CD.plugins,datalabels:showDL?{anchor:horiz?'end':'end',align:horiz?'end':'top',formatter:v=>total>0?Math.round(v/total*100)+'%':'',font:{family:"'Poppins',sans-serif",weight:600,size:fs},color:'#1F2937',clip:false}:{display:false}},
         layout:{padding:{top:!horiz?18:0,right:horiz?48:0,left:horiz?2:0}},
         scales:{x:{display:!hideX,grid:{display:horiz&&!hideX,color:c.gridColor},ticks:{display:!hideX,font:{family:"'Poppins',sans-serif",size:fs},color:c.tickColor},grace:horiz?'12%':0},
         y:{display:!hideY,grid:{color:c.gridColor,display:!horiz},ticks:{font:{family:"'Poppins',sans-serif",size:fs},color:c.tickColor},grace:!horiz?'14%':0}}},
@@ -963,14 +963,14 @@
       const nps=pct(promotores,total)-pct(detractores,total);
       const pProm=pct(promotores,total);const pPasiv=pct(pasivos,total);const pDet=pct(detractores,total);
       const stackedBarHTML=`<div style="display:flex;gap:1px;height:24px;border-radius:8px;overflow:hidden;box-shadow:var(--sh-xs);">
-        <div style="flex:${promotores};background:#E0253F;display:flex;align-items:center;justify-content:center;${promotores>total*.05?`color:#fff;font-weight:700;font-size:10px;`:''}"></div>
-        <div style="flex:${pasivos};background:#D1D5DB;display:flex;align-items:center;justify-content:center;${pasivos>total*.05?`color:#0F1729;font-weight:700;font-size:10px;`:''}"></div>
-        <div style="flex:${detractores};background:#0F1729;display:flex;align-items:center;justify-content:center;${detractores>total*.05?`color:#fff;font-weight:700;font-size:10px;`:''}"></div>
+        <div style="flex:${promotores};background:linear-gradient(90deg,#0F1729,#1e2a40);display:flex;align-items:center;justify-content:center;${promotores>total*.05?`color:#fff;font-weight:700;font-size:10px;`:''}"></div>
+        <div style="flex:${pasivos};background:linear-gradient(90deg,#E5E7EB,#D1D5DB);display:flex;align-items:center;justify-content:center;${pasivos>total*.05?`color:#374151;font-weight:700;font-size:10px;`:''}"></div>
+        <div style="flex:${detractores};background:linear-gradient(90deg,#B51A03,#8b1302);display:flex;align-items:center;justify-content:center;${detractores>total*.05?`color:#fff;font-weight:700;font-size:10px;`:''}"></div>
       </div>`;
       const legendHTML=`
       <div style="display:flex;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);justify-content:center;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:12px;height:12px;background:#E0253F;border-radius:3px;"></div>
+          <div style="width:12px;height:12px;background:#0F1729;border-radius:3px;"></div>
           <span style="font-size:10px;color:var(--txt-2);"><strong>Promotores</strong> (9-10)</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -978,22 +978,22 @@
           <span style="font-size:10px;color:var(--txt-2);"><strong>Pasivos</strong> (7-8)</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:12px;height:12px;background:#0F1729;border-radius:3px;"></div>
+          <div style="width:12px;height:12px;background:#B51A03;border-radius:3px;"></div>
           <span style="font-size:10px;color:var(--txt-2);"><strong>Detractores</strong> (1-6)</span>
         </div>
       </div>
       `;
       const html=`
       <div style="display:flex;gap:20px;margin-bottom:20px;align-items:flex-start;">
-        <div style="background:#0F1729;color:#fff;border-radius:12px;padding:16px;text-align:center;min-width:140px;box-shadow:var(--sh-sm);">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9ca3af;margin-bottom:8px;">Recomendación</div>
+        <div style="background:linear-gradient(135deg,#375395 0%,#0F1729 100%);color:#fff;border-radius:12px;padding:16px;text-align:center;min-width:140px;box-shadow:var(--sh-sm);">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.6);margin-bottom:8px;">Recomendación</div>
           <div style="font-size:28px;font-weight:800;line-height:1;">${nps>0?'+':''}${nps}</div>
-          <div style="font-size:10px;color:#9ca3af;margin-top:4px;">NPS Index</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px;">NPS Index</div>
         </div>
         <div style="flex:1;">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
             <div style="text-align:center;">
-              <div style="font-size:18px;font-weight:800;color:#E0253F;line-height:1;">${pProm}%</div>
+              <div style="font-size:18px;font-weight:800;color:#0F1729;line-height:1;">${pProm}%</div>
               <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-3);margin-top:4px;">Promotores</div>
             </div>
             <div style="text-align:center;">
@@ -1001,7 +1001,7 @@
               <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-3);margin-top:4px;">Pasivos</div>
             </div>
             <div style="text-align:center;">
-              <div style="font-size:18px;font-weight:800;color:#0F1729;line-height:1;">${pDet}%</div>
+              <div style="font-size:18px;font-weight:800;color:#B51A03;line-height:1;">${pDet}%</div>
               <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-3);margin-top:4px;">Detractores</div>
             </div>
           </div>
@@ -1120,14 +1120,14 @@
                 ${deltaTxt}&nbsp;pp
               </div>
               <div class="bl-delta-text">
-                ${isOver?'Supera':'Queda por debajo de'} el <strong>${benchmarkLabel.toLowerCase()} (${benchmark.toString().replace('.',',')}%)</strong> en <strong>${Math.abs(delta).toFixed(1).replace('.',',')} puntos porcentuales</strong>. Base: <strong>n = ${total}</strong> respuestas válidas.
+                ${isOver?'Supera':'Queda por debajo de'} el <strong>${benchmarkLabel} (${benchmark.toString().replace('.',',')}%)</strong> en <strong>${Math.abs(delta).toFixed(1).replace('.',',')} puntos porcentuales</strong>. Base: <strong>n = ${total}</strong> respuestas válidas.
               </div>
             </div>
           </div>
         </div>
 
         <div style="display:none;">
-          <div class="bl-section-title">Comparativa vs benchmark categoría</div>
+          <div class="bl-section-title">Comparativa vs benchmark Franuí 2025</div>
           <div class="bl-bullet-wrap">
             <div class="bl-bullet-track">
               <div class="bl-bullet-fill" style="width:${pSiPrecise}%">${pSi}%</div>
@@ -1150,9 +1150,9 @@
             </div>
             <div class="bl-legend">
               <div class="bl-lg-item"><span class="bl-lg-sw" style="background:#B51A03"></span>No compradores</div>
-              <div class="bl-lg-item"><span class="bl-lg-sw" style="background:#d99aa3"></span>Indecisos</div>
+              <div class="bl-lg-item"><span class="bl-lg-sw" style="background:#D1D5DB"></span>Indecisos</div>
               <div class="bl-lg-item"><span class="bl-lg-sw" style="background:#0F1729"></span>Compradores Potenciales</div>
-              <div class="bl-lg-item" style="margin-left:auto"><span class="bl-lg-sw" style="background:#375395"></span>Línea ${benchmarkLabel.toLowerCase()}</div>
+              <div class="bl-lg-item" style="margin-left:auto"><span class="bl-lg-sw" style="background:#375395"></span>Línea ${benchmarkLabel}</div>
             </div>
           </div>
         </div>
@@ -1162,7 +1162,7 @@
           <div class="bl-insight-txt">${insightTxt}</div>
         </div>
 
-        <div class="bl-summary">
+        <div class="bl-summary" style="display:none;">
           <table>
             <thead><tr><th>Indicador</th><th>% Intención positiva</th><th>Δ vs Benchmark</th></tr></thead>
             <tbody>
