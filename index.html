@@ -464,6 +464,10 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Insights
         </a>
+        <a class="nav-item" href="#video-campana" onclick="closeSidebarMobile()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Vídeo
+        </a>
       </nav>
       <div class="sidebar-bottom"></div>
     </aside>
@@ -619,6 +623,30 @@
             <div class="section-line"></div>
           </div>
           <div class="insight-grid row-gap" id="insightsContainer"></div>
+        </div>
+
+        <!-- Vídeo de la campaña -->
+        <div id="video-campana" style="scroll-margin-top:72px;margin-top:48px;">
+          <div class="section-header">
+            <div class="section-accent"></div>
+            <div class="section-title">Vídeo de la campaña</div>
+            <div class="section-line"></div>
+          </div>
+          <div style="margin-top:20px;display:flex;justify-content:center;">
+            <a href="https://www.youtube.com/watch?v=VFbtnM0UQBY" target="_blank" rel="noopener noreferrer"
+               style="position:relative;display:inline-block;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:640px;width:100%;cursor:pointer;">
+              <img src="https://img.youtube.com/vi/VFbtnM0UQBY/maxresdefault.jpg"
+                   alt="Vídeo de la campaña Franuí PINK"
+                   style="width:100%;display:block;border-radius:12px;" />
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);border-radius:12px;transition:background 0.2s;"
+                   onmouseover="this.style.background='rgba(0,0,0,0.38)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="none">
+                  <circle cx="36" cy="36" r="36" fill="rgba(0,0,0,0.55)"/>
+                  <polygon points="28,20 56,36 28,52" fill="white"/>
+                </svg>
+              </div>
+            </a>
+          </div>
         </div>
 
         <div class="page-footer" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);">
