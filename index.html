@@ -705,11 +705,11 @@
     const QUESTIONS = [
       { col:'pJDVViytaDltpzmFPwST', title:'Sabor probado',
         sub:'¿Qué sabor de Franuí Pink has probado?',
-        type:'stackedbar', pairStart:true,
+        type:'stackedbar',
         colorMap:{'Leche':'#E9CA97','Dark':'#492012','Pink':'#EDA3C9'} },
       { col:'S57uYHzyzJ38WblS80Ul', title:'Conocimiento previo',
         sub:'Antes de obtener la muestra, ¿Conocías a Franuí?',
-        type:'stackedbar', pairEnd:true,
+        type:'stackedbar', pairStart:true,
         fixedOrder:['No les conocían.','Sí, les conocía pero no les había probado.','Sí, les conocía y les había probado alguna vez.','Soy comprador/a habitual.'],
         colorMap:{
           'No les conocían.':'#E0253F',
@@ -719,14 +719,15 @@
         } },
       { col:'WSMsKBgU5q8kChw1ycZW', title:'Experiencia con la categoría',
         sub:'¿Has probado otras frutas bañadas en chocolate?',
-        type:'stackedbar',
+        type:'stackedbar', pairEnd:true,
         colorMap:{'Sí':'#E0253F','Si':'#E0253F','No':'#0F1729'} },
       { col:'hqXP4hjYiMuEui8kRe25', title:'Canal de descubrimiento',
         sub:'Para quienes ya conocían a Franuí, <br> ¿Dónde las conociste?',
         type:'premium_leaderboard', multi:true, pairStart:true },
       { col:'3hll6McJUXsCaYf4a8bJ', title:'Competencia conocida',
         sub:'Para quienes han probado otras frutas bañadas en chocolate, <br> ¿Puedes indicar cuál marca y en qué lugar las has comprado?',
-        type:'premium_leaderboard', multi:true, pairEnd:true },
+        type:'premium_leaderboard', multi:true, pairEnd:true,
+        note:'Los usuarios también mencionaron a Tru fru (3) y Brookside (2)' },
       { col:'rIMRQDJiHu8L4Gj5Jqrn', title:'Impresión general',
         sub:'Tras probar el producto, ¿Cuál es tu impresión general?',
         type:'score', pairStart:true, benchmark:8.3,
@@ -760,10 +761,13 @@
       { col:'Yxu6Dx62DCgaVcghQSFx', title:'Sustitución de la categoría',
         sub:'¿Sustituirías otros postres o snacks que sueles comprar por la Frambuesa Franuí que has probado gratis con Samplia?',
         type:'bar', pairStart:true,
-        colorMap:{'Sí':'#0F1729','Si':'#0F1729','No':'#B51A03','Tal vez':'#E9455B','Quizás':'#E9455B','Quizas':'#E9455B'} },
+        colorMap:{'Sí':'#375395','Si':'#375395','No':'#375395','Tal vez':'#375395','Quizás':'#375395','Quizas':'#375395'} },
       { col:'PYM3QjNUyQTMS5i8v8hL', title:'Frenos de compra',
         sub:'¿Por qué no la comprarías?',
         type:'hbar', multi:true, tallBars:true, redGradient:true, pairEnd:true },
+      { col:'__sankey__', title:'Flujo de decisión de compra',
+        sub:'Compradores Potenciales → sustitución de categoría · Indecisos y No compradores → frenos de compra',
+        type:'sankey_cross', hidden:true },
       { col:'fNBDQjzMbxXQQPT3ov5m', title:'Recomendación',
         sub:'¿Recomendarías a un amigo o familiar comprar este producto que has probado con Samplia?',
         type:'nps' },
@@ -1205,6 +1209,189 @@
       `;
     }
 
+    // ── SANKEY (pure SVG, no external libs) ──
+    function renderSankeyChart(container, rows) {
+      const intentIdx=getIdx('1tSSoru4maIFGXYVJ0cj');
+      const sustIdx=getIdx('Yxu6Dx62DCgaVcghQSFx');
+      const frenosIdx=getIdx('PYM3QjNUyQTMS5i8v8hL');
+
+      function iKey(raw){
+        const l=norm(raw);if(!l)return null;
+        if(l.includes('no compradores')||l.startsWith('no'))return'NC';
+        if(l.includes('indecisos')||l.includes('lo dudo')||l==='dudo'||l.includes('tal vez')||l==='talvez')return'IN';
+        if(l.includes('compradores potenciales')||l.startsWith('si'))return'CP';
+        return null;
+      }
+      function sKey(raw){
+        const l=norm(raw);if(!l)return null;
+        if(l.startsWith('si')||l==='si')return'S:Sí sustituiría';
+        if(l.includes('tal vez')||l.includes('quiz'))return'S:Quizás';
+        if(l.startsWith('no')||l==='no')return'S:No sustituiría';
+        return null;
+      }
+
+      // ── Aggregate counts from each column independently ──
+      const intentCounts={CP:0,IN:0,NC:0};
+      rows.forEach(row=>{const k=iKey((row[intentIdx]||'').toString().trim());if(k)intentCounts[k]++;});
+
+      const sustCounts={};
+      rows.forEach(row=>{const k=sKey((row[sustIdx]||'').toString().trim());if(k)sustCounts[k]=(sustCounts[k]||0)+1;});
+
+      const frenosRaw={};
+      rows.forEach(row=>{
+        const raw=frenosIdx>=0?(row[frenosIdx]||'').toString().trim():'';
+        raw.split(/[|;\/]+/).map(s=>s.trim()).filter(Boolean).forEach(f=>{frenosRaw[f]=(frenosRaw[f]||0)+1;});
+      });
+
+      if(!intentCounts.CP&&!intentCounts.IN&&!intentCounts.NC){
+        container.innerHTML='<div class="no-data">Sin datos suficientes</div>';return;
+      }
+
+      // Top 5 frenos + Otros
+      const topF=Object.entries(frenosRaw).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
+      const frenosNorm={};
+      Object.entries(frenosRaw).forEach(([f,v])=>{
+        const nf=topF.includes(f)?f:'Otros motivos';frenosNorm[nf]=(frenosNorm[nf]||0)+v;
+      });
+
+      // ── Build links: proportional distribution ──
+      // CP → substitution responses (distributed proportionally to sust totals)
+      // IN → frenos, NC → frenos (distributed proportionally to frenos totals)
+      function propLinks(srcKey, dist){
+        const total=Object.values(dist).reduce((s,v)=>s+v,0);if(!total)return[];
+        const n=intentCounts[srcKey];if(!n)return[];
+        const entries=Object.entries(dist).sort((a,b)=>b[1]-a[1]);
+        let rem=n;
+        return entries.map(([tgt,v],i)=>{
+          const val=i<entries.length-1?Math.round(n*v/total):rem;
+          rem-=val;return val>0?{src:srcKey,tgt,value:val}:null;
+        }).filter(Boolean);
+      }
+
+      const linkList=[
+        ...propLinks('CP',sustCounts),
+        ...propLinks('IN',frenosNorm).map(l=>({...l,tgt:'F:'+l.tgt})),
+        ...propLinks('NC',frenosNorm).map(l=>({...l,tgt:'F:'+l.tgt})),
+      ];
+
+      if(!linkList.length){container.innerHTML='<div class="no-data">Sin datos suficientes</div>';return;}
+
+      const NAMES={CP:'Compradores Potenciales',IN:'Indecisos',NC:'No compradores'};
+      const SUST_KEYS=['S:Sí sustituiría','S:Quizás','S:No sustituiría'];
+      SUST_KEYS.forEach(k=>{NAMES[k]=k.slice(2);});
+      const FRENO_KEYS=[...topF,'Otros motivos'].map(f=>'F:'+f);
+      FRENO_KEYS.forEach(k=>{NAMES[k]=k.slice(2);});
+
+      const usedSrc=new Set(),usedTgt=new Set();
+      linkList.forEach(l=>{usedSrc.add(l.src);usedTgt.add(l.tgt);});
+      const leftNodes=['CP','IN','NC'].filter(n=>usedSrc.has(n));
+      const rightSust=SUST_KEYS.filter(n=>usedTgt.has(n));
+      const rightFreno=FRENO_KEYS.filter(n=>usedTgt.has(n));
+      const rightNodes=[...rightSust,...rightFreno];
+      if(!leftNodes.length||!rightNodes.length){container.innerHTML='<div class="no-data">Sin datos suficientes</div>';return;}
+
+      const lVal={};leftNodes.forEach(n=>{lVal[n]=0;});
+      const rVal={};rightNodes.forEach(n=>{rVal[n]=0;});
+      linkList.forEach(l=>{lVal[l.src]+=l.value;rVal[l.tgt]+=l.value;});
+
+      const COLORS={CP:'#0F1729',IN:'#9CA3AF',NC:'#B51A03','S:Sí sustituiría':'#375395','S:Quizás':'#6B90C5','S:No sustituiría':'#9AB5D9'};
+      const fg=['#C21D03','#CF3B20','#DC5A3E','#E87A5D','#F09C80','#D1D5DB'];
+      FRENO_KEYS.forEach((k,i)=>{COLORS[k]=fg[i%fg.length];});
+      const gc=k=>COLORS[k]||'#6B7280';
+
+      const W=820,H=520,TP=66,BP=20,NW=20,NP=14,LX=8,RX=W-NW-190,IH=H-TP-BP;
+
+      // Layout left column
+      const lPos={};
+      (()=>{
+        const tot=leftNodes.reduce((s,n)=>s+(lVal[n]||0),0)||1;
+        const av=IH-NP*Math.max(0,leftNodes.length-1);
+        let y=TP;
+        leftNodes.forEach(n=>{
+          const h=Math.max(8,Math.round((lVal[n]||0)/tot*av));
+          lPos[n]={y0:y,y1:y+h,h,value:lVal[n]||0};y+=h+NP;
+        });
+      })();
+
+      // Layout right column (sust group then freno group, with gap)
+      const rPos={};
+      (()=>{
+        const EGAP=rightSust.length>0&&rightFreno.length>0?28:0;
+        const tot=rightNodes.reduce((s,n)=>s+(rVal[n]||0),0)||1;
+        const av=IH-NP*Math.max(0,rightNodes.length-1)-EGAP;
+        let y=TP;
+        rightSust.forEach(n=>{
+          const h=Math.max(8,Math.round((rVal[n]||0)/tot*av));
+          rPos[n]={y0:y,y1:y+h,h,value:rVal[n]||0};y+=h+NP;
+        });
+        if(EGAP>0)y+=EGAP;
+        rightFreno.forEach(n=>{
+          const h=Math.max(8,Math.round((rVal[n]||0)/tot*av));
+          rPos[n]={y0:y,y1:y+h,h,value:rVal[n]||0};y+=h+NP;
+        });
+      })();
+
+      linkList.sort((a,b)=>{
+        const si=leftNodes.indexOf(a.src)-leftNodes.indexOf(b.src);
+        return si!==0?si:rightNodes.indexOf(a.tgt)-rightNodes.indexOf(b.tgt);
+      });
+
+      const srcC={};leftNodes.forEach(n=>{srcC[n]=lPos[n].y0;});
+      const tgtC={};rightNodes.forEach(n=>{tgtC[n]=rPos[n]?rPos[n].y0:0;});
+      const x0=LX+NW,x1=RX,cp=(x0+x1)/2;
+
+      const ribbons=linkList.map(l=>{
+        const lp=lPos[l.src];const rp=rPos[l.tgt];if(!lp||!rp)return null;
+        const sh=Math.max(1,Math.round(l.value/lVal[l.src]*lp.h));
+        const th=Math.max(1,Math.round(l.value/rVal[l.tgt]*rp.h));
+        const sy0=srcC[l.src],sy1=sy0+sh,ty0=tgtC[l.tgt],ty1=ty0+th;
+        srcC[l.src]+=sh;tgtC[l.tgt]+=th;
+        const d=`M${x0} ${sy0} C${cp} ${sy0} ${cp} ${ty0} ${x1} ${ty0} L${x1} ${ty1} C${cp} ${ty1} ${cp} ${sy1} ${x0} ${sy1}Z`;
+        return{d,color:gc(l.src),title:`${NAMES[l.src]} → ${NAMES[l.tgt]}: ${l.value} resp.`};
+      }).filter(Boolean);
+
+      let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" style="font-family:'Poppins',sans-serif;display:block;">`;
+
+      // Left header
+      s+=`<text x="${LX}" y="28" fill="#9CA3AF" font-size="8.5" font-weight="700" letter-spacing="1">INTENCIÓN DE COMPRA</text>`;
+      s+=`<line x1="${LX}" y1="34" x2="${LX+155}" y2="34" stroke="#E5E7EB" stroke-width="1"/>`;
+
+      // Right group headers
+      if(rightSust.length&&rPos[rightSust[0]]){
+        const ry=rPos[rightSust[0]].y0;
+        s+=`<text x="${RX}" y="${ry-10}" fill="#9CA3AF" font-size="8.5" font-weight="700" letter-spacing="1">SUSTITUCIÓN DE CATEGORÍA</text>`;
+        s+=`<line x1="${RX}" y1="${ry-5}" x2="${RX+165}" y2="${ry-5}" stroke="#E5E7EB" stroke-width="1"/>`;
+      }
+      if(rightFreno.length&&rPos[rightFreno[0]]){
+        const ry2=rPos[rightFreno[0]].y0;
+        s+=`<text x="${RX}" y="${ry2-10}" fill="#9CA3AF" font-size="8.5" font-weight="700" letter-spacing="1">FRENOS DE COMPRA</text>`;
+        s+=`<line x1="${RX}" y1="${ry2-5}" x2="${RX+135}" y2="${ry2-5}" stroke="#E5E7EB" stroke-width="1"/>`;
+      }
+
+      // Ribbons
+      ribbons.forEach(r=>{s+=`<path d="${r.d}" fill="${r.color}" fill-opacity="0.28"><title>${r.title}</title></path>`;});
+
+      // Nodes + labels
+      leftNodes.forEach(n=>{
+        const p=lPos[n];if(!p)return;
+        const mid=(p.y0+p.y1)/2;
+        s+=`<rect x="${LX}" y="${p.y0}" width="${NW}" height="${p.h}" fill="${gc(n)}" rx="4"/>`;
+        s+=`<text x="${LX+NW+8}" y="${mid-5}" fill="#1F2937" font-size="11.5" font-weight="600" dominant-baseline="middle">${NAMES[n]}</text>`;
+        s+=`<text x="${LX+NW+8}" y="${mid+10}" fill="#9CA3AF" font-size="10" dominant-baseline="middle">${p.value} resp.</text>`;
+      });
+      rightNodes.forEach(n=>{
+        const p=rPos[n];if(!p)return;
+        const mid=(p.y0+p.y1)/2;
+        const lbl=NAMES[n];const tr=lbl.length>26?lbl.slice(0,24)+'…':lbl;
+        s+=`<rect x="${RX}" y="${p.y0}" width="${NW}" height="${p.h}" fill="${gc(n)}" rx="4"/>`;
+        s+=`<text x="${RX+NW+8}" y="${mid-5}" fill="#1F2937" font-size="11" font-weight="600" dominant-baseline="middle">${tr}</text>`;
+        s+=`<text x="${RX+NW+8}" y="${mid+10}" fill="#9CA3AF" font-size="10" dominant-baseline="middle">${p.value} resp.</text>`;
+      });
+
+      s+=`</svg>`;
+      container.innerHTML=s;
+    }
+
     // ── BUILD DYNAMIC CHART SCAFFOLDING ──
     function buildDynamicCharts(){
       const container=document.getElementById('dynamicCharts');
@@ -1224,6 +1411,8 @@
           return`<div class="card"><div class="card-inner">${headerHTML}<div id="${chartId}" class="bl-container"></div></div></div>`;
         if(q.type==='likert_grid')
           return`<div class="card"><div class="card-inner">${headerHTML}<div id="${chartId}" class="likert-grid-wrap"></div></div></div>`;
+        if(q.type==='sankey_cross')
+          return`<div class="card"><div class="card-inner">${headerHTML}<div id="${chartId}" style="width:100%;"></div></div></div>`;
         const hClass=q.type==='doughnut'?'h240':(q.type==='stackedbar'?'h180':'h260');
         return`<div class="card"><div class="card-inner">${headerHTML}<div class="chart-wrap ${hClass}"><canvas id="${chartId}"></canvas></div></div></div>`;
       }
@@ -1342,6 +1531,7 @@
           const arr=q.multi?getColDataMulti(rows,idx):getColData(rows,idx);
           const el=document.getElementById(chartId);if(!el)return;
           renderPremiumLeaderboard(el,arr);
+          if(q.note){const noteEl=document.createElement('p');noteEl.style.cssText='margin-top:12px;font-size:11px;color:var(--txt-3);font-style:italic;padding-top:10px;border-top:1px dashed var(--border);';noteEl.innerHTML='<strong style="font-style:normal;">Nota:</strong> '+q.note;el.appendChild(noteEl);}
         } else if(q.type==='nps'){
           const arr=getColData(rows,idx);
           const el=document.getElementById(chartId);if(!el)return;
@@ -1368,6 +1558,9 @@
         } else if(q.type==='likert_grid'){
           const el=document.getElementById(chartId);if(!el)return;
           renderLikertGrid(el,rows,q);
+        } else if(q.type==='sankey_cross'){
+          const el=document.getElementById(chartId);if(!el)return;
+          renderSankeyChart(el,rows);
         }
       });
     }
